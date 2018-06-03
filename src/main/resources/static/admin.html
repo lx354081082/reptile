@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8"/>
+    <title>弹幕</title>
+    <script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.min.js"></script>
+    <script src="https://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
+    <!--<link href="/bootstrap/bootstrap-table.css" rel="stylesheet"/>-->
+    <link href="https://cdn.bootcss.com/bootstrap-table/1.11.1/bootstrap-table.css" rel="stylesheet">
+    <script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <!--<script src="/bootstrap/bootstrap-table.js"></script>-->
+    <script src="https://cdn.bootcss.com/bootstrap-table/1.11.1/bootstrap-table.js"></script>
+    <script src="https://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+    <!--<script src="/js/echarts.js"></script>-->
+    <script type="text/javascript">
+        //全局变量
+        var chart = null;
+        var chartsys = null;
+
+        var cpusize = 0;
+
+
+
+
+        var rooms = ['allRoom'];
+
+        var roomsObj = new Array();
+
+
+
+        $(function () {
+            //加载 状态 折线图
+            hcharts();
+            //加载正在运行的任务(同步AJAX)
+            zttab();
+            //初始化 图表 数据
+            $.each(rooms, function (i) {
+                // alert(i);
+                var c = chart.addSeries({
+                    name: this,
+                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                });
+                roomsObj.push(c);
+            });
+            //webSocket连接 监听数据
+            connect();
+
+            //加载系统折线图
+            syscharts();
+            //初始化系统折线图数据
+            sysConf()
+            //监听数据
+            sysConnect();
+
+        });
+
+        function hcharts() {
+            //曲线
+            chart = Highcharts.chart('Highcharts', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: '弹幕数量'
+                },
+                xAxis: {
+                    type: 'linear'
+                },
+                yAxis: {
+                    title: {
+                        text: '数量'
+                    }
+                },
+                plotOptions: {
+//                    line: {
+//                        dataLabels: {
+//                            enabled: true          // 开启数据标签
+//                        },
+//                        enableMouseTracking: false // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+//                    }
+                    spline: {
+                        lineWidth: 2,
+                        states: {
+                            hover: {
+                                lineWidth: 3
+                            }
+                        },
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function syscharts() {
+            chartsys = Highcharts.chart('sysCharts', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: '系统状态'
+                },
+                xAxis: {
+                    type: 'linear'
+                },
+                yAxis: [{
+                    title: {
+                        text: 'cpu'
+                    },
+                    id: 'cpu',
+                    max: 100,
+                    min:0
+                }, {
+                    title: {
+                        text: 'RAM'
+                    },
+                    id: 'ram',
+                    opposite: true,
+                    min:0
+                }],
+                plotOptions: {
+                    area: {
+                        fillColor: {
+                            linearGradient: {
+                                x1: 0,
+                                y1: 0,
+                                x2: 0,
+                                y2: 1
+                            },
+                            stops: [
+                                [0, Highcharts.getOptions().colors[0]],
+                                [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                            ]
+                        },
+                        marker: {
+                            radius: 2
+                        },
+                        lineWidth: 1,
+                        states: {
+                            hover: {
+                                lineWidth: 1
+                            }
+                        },
+                        threshold: null
+                    },
+                    spline: {
+                        lineWidth: 2,
+                        states: {
+                            hover: {
+                                lineWidth: 3
+                            }
+                        },
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function sysConf() {
+            $.ajax({
+                url: '/admin/sys/data',
+                type: "get",
+                async: false,
+                data: [],
+                success: function (data) {
+                    //设置y轴最大值
+                    chartsys.get('ram').setExtremes(0, parseInt(data.ram));
+                    //加载数据列
+                    chartsys.addSeries({
+                        name: 'ram',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        yAxis: 'ram',
+                        id: 'rams',
+                        type: 'area'
+                    });
+
+                    //cpu线程数
+                    cpusize = parseInt(data.size);
+
+                    //
+                    for (var i = 0; i < cpusize; i++) {
+                        chartsys.addSeries({
+                            name: 'cpu' + i,
+                            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            id: 'cpu' + i,
+                            yAxis: 'cpu'
+                        });
+                    }
+                }
+            });
+        }
+
+        function sysConnect() {
+            var socket = new SockJS('/websocket');
+            stompClient = Stomp.over(socket);
+            //订阅地址
+            stompClient.connect({}, function (frame) {
+
+                //订阅消息
+                stompClient.subscribe('/topic/sys/data', function (message) {
+                    sysaddPoin(message.body);
+                });
+            })
+        }
+
+        function connect() {
+            var socket = new SockJS('/websocket');
+            stompClient = Stomp.over(socket);
+            // 订阅地址
+            stompClient.connect({}, function (frame) {
+
+                //订阅消息
+                stompClient.subscribe('/topic/barrage/count', function (message) {
+                    addPoin(message.body);
+                });
+            })
+        }
+
+        function addPoin(val) {
+
+            //string转JSON
+            var jsonobj = JSON.parse(val);
+
+            // json.each(function (k,v) {
+            //     alert(k + "======" + v);
+            // });
+            var flg = roomsObj[0].data.length > 30;
+
+            for (k in jsonobj) {
+                for (j = 0; j < rooms.length; j++) {
+                    // alert(rooms[j]+'-----------'+jsonobj[k])
+                    if (rooms[j] == k) {
+                        //添加数据点 false禁止重绘
+                        roomsObj[j].addPoint(jsonobj[k.toString()], false, flg);
+                    }
+                }
+            }
+            //图表重绘
+            chart.redraw();
+
+        }
+        function sysaddPoin(val) {
+            //string转JSON
+            var jsonobj = JSON.parse(val);
+            var flg = chartsys.get('rams').data.length > 30;
+
+            chartsys.get('rams').addPoint(jsonobj['ram'], false, flg);
+
+            for (var i = 0; i < cpusize; i++) {
+                chartsys.get('cpu'+i).addPoint(jsonobj['cpu'+i], false, flg);
+            }
+
+
+            //图表重绘
+            chartsys.redraw();
+        }
+        /**
+         * 任务执行情况
+         */
+        function zttab() {
+            $.ajax({
+                url: '/admin/joblist',
+                type: "get",
+                async: false,
+                data: [],
+                success: function (data) {
+                    $("#zttable").empty();
+                    $(data).each(function () {
+
+                        rooms.push(this.roomid);
+
+                        var txt = '<button type="button" class="btn btn-sm btn-info" onclick="stop(\'' + this.roomid + '\')">' + this.roomid + '</button>&nbsp;'
+                        $("#zttable").prepend(txt);
+                    })
+                }
+
+            });
+        }
+
+        /**
+         * 暂停任务
+         * @param rommid
+         */
+        function stop(rid) {
+            $.ajax({
+                url: '/admin/stop/' + rid,
+                type: "get",
+                data: [],
+                success: function (flg) {
+                    alert(flg);
+                    zttab();
+                }
+            });
+        }
+
+
+    </script>
+</head>
+<body style="height: 100%">
+<div class="container-fluid" style="height: 100%">
+    <div class="row clearfix" style="height: 100%">
+        <div class="col-md-12 column" style="height: 100%">
+            <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target="#bs-example-navbar-collapse-1"><span
+                            class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
+                            class="icon-bar"></span><span class="icon-bar"></span></button>
+                    <a class="navbar-brand" href="#">弹幕抓取 by Lx</a>
+                </div>
+
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/index.html">实时弹幕</a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">用户<strong class="caret"></strong></a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="/user.html">用户查找</a>
+                                </li>
+                                <li>
+                                    <a href="/userdetail">用户详情</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">弹幕<strong class="caret"></strong></a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="/barrage.html">模糊搜索</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="/admin.html" class="active">后台</a>
+                        </li>
+                        <li>
+                            <a href="#">登录</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="row clearfix" style="height: 100%">
+                <div class="col-md-12 column" style="height: 100%;padding-top: 50px;box-sizing: border-box">
+                    正在运行的任务&nbsp;点击停止任务
+                    <span id="zttable"></span>
+                    <br/>
+                    <div id="Highcharts" style="width: 100%"></div>
+                    <div id="sysCharts" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

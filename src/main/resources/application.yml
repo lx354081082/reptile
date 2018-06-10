@@ -8,12 +8,12 @@ spring:
     cache: false
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/barrage?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=TRUE
+    url: jdbc:mysql://1.0.0.111:3306/barrage?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=TRUE
     username: root
     password: root
   data:
     solr:
-      host: http://localhost:8983/solr/core
+      host: http://1.0.0.111:8983/solr/core
   redis:
       database: 0
       host: localhost

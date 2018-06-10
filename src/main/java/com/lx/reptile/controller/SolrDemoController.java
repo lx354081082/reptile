@@ -1,5 +1,7 @@
 package com.lx.reptile.controller;
 
+import com.lx.reptile.pojo.DouyuBarrage;
+import com.lx.reptile.service.DouyuBarrageService;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
@@ -17,15 +19,21 @@ import java.util.UUID;
 public class SolrDemoController {
     @Autowired
     private SolrClient solrClient;
+    @Autowired
+    private DouyuBarrageService douyuBarrageService;
 
     @RequestMapping("/add")
     public Object add() throws IOException, SolrServerException {
-        String uuid = UUID.randomUUID().toString();
-        SolrInputDocument doc = new SolrInputDocument();
-        doc.setField("id", uuid);
-        doc.setField("content_ik", "我是中国人, 我爱中国");
-        solrClient.add(doc);
+        for (DouyuBarrage douyuBarrage : douyuBarrageService.get(0, 10000)) {
+            SolrInputDocument doc = new SolrInputDocument();
+            doc.setField("b_id", douyuBarrage.getId());
+            doc.setField("b_txt", douyuBarrage.getTxt());
+            doc.setField("b_uid", douyuBarrage.getUid());
+            doc.setField("b_rid", douyuBarrage.getRoomid());
+            solrClient.add(doc);
+        }
         solrClient.commit();
-        return uuid;
+        return "true";
     }
+
 }

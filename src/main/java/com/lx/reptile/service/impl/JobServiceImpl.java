@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public class JobServiceImpl implements JobService {
     @Autowired
-    JobMapper jobMapper;
+    private JobMapper jobMapper;
 
     @Override
     public Boolean isHave(String roomid) {

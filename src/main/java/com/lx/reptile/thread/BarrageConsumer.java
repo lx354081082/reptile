@@ -29,7 +29,7 @@ public class BarrageConsumer {
 
     public void rPop(RedisBarrage redisBarrage) {
         redisBarrages.add(redisBarrage);
-        if (redisBarrages.size() >= 100) {
+        if (redisBarrages.size() >= 1000) {
             try {
                 toDb();
             } catch (Exception e) {

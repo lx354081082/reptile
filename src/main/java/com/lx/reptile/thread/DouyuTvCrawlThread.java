@@ -293,37 +293,7 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
         //弹幕信息入列(ActiveMQ)
         activemqService.sendMessage("barrage.queue", JSON.toJSONString(new RedisBarrage(BarrageConstant.DOUYU, msg, new Date())));
     }
-
-    private void toPoJo(Map<String, Object> msg, DouyuBarrage douyuBarrage) {
-//        //用户名
-//        String name = (String) msg.get("nn");
-//        //用户id
-//        String uid = (String) msg.get("uid");
-//        //用户等级
-//        String level = (String) msg.get("level");
-//        //房间id
-//        String rid = (String) msg.get("rid");
-//        //弹幕信息
-//        String txt = null;
-//        try {
-//            txt = (String) msg.get("txt");
-//        } catch (Exception e) {
-//            txt = (String) msg.get("txt").toString();
-//            txt = txt.substring(1, txt.length() - 2);
-//            log.debug(e.getMessage());
-//        }
-//        String brid = (String) msg.get("brid");
-//
-//        douyuBarrage.setUid(uid);
-//        douyuBarrage.setUname(name);
-//        douyuBarrage.setRoomid(rid);
-//        douyuBarrage.setDate(new Date());
-//        try {
-//            douyuBarrage.setLevel(Integer.parseInt(level));
-//        } catch (NumberFormatException e) {
-//        }
-//        douyuBarrage.setTxt(txt);
-    }
+    
 
     /**
      * 克隆对象 循环创建该类线程会出现多个线程引用同一对象的问题

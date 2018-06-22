@@ -1,18 +1,22 @@
 package com.lx.reptile.thread;
 
+import com.alibaba.fastjson.JSON;
 import com.lx.reptile.po.RedisBarrage;
 import com.lx.reptile.pojo.DouyuBarrage;
+import com.lx.reptile.service.ActivemqService;
 import com.lx.reptile.service.RedisService;
 import com.lx.reptile.thread.util.douyu.DyMessage;
 import com.lx.reptile.thread.util.douyu.MsgView;
 import com.lx.reptile.util.BarrageConstant;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.jms.Destination;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -36,6 +40,8 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
 //    DouyuBarrageService douyuBarrageService;
     @Autowired
     RedisService redisService;
+    @Autowired
+    ActivemqService activemqService;
 
     //设置需要访问的房间ID信息
     private String roomId = "24422";
@@ -280,9 +286,12 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
         template.convertAndSend("/topic/douyu/all",
                 "["+rid+"]<a href='/userdetail/douyu/" + uid + "'>" + name + ":</a>" + txt);
 
-        //弹幕信息入列
-        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
+        //弹幕信息入列(redis)
+//        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
 
+
+        //弹幕信息入列(ActiveMQ)
+        activemqService.sendMessage("barrage.queue", JSON.toJSONString(new RedisBarrage(BarrageConstant.DOUYU, msg, new Date())));
     }
 
     private void toPoJo(Map<String, Object> msg, DouyuBarrage douyuBarrage) {

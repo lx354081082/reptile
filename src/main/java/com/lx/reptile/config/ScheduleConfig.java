@@ -103,13 +103,12 @@ public class ScheduleConfig {
     /**
      * 统计弹幕
      */
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 1000)
     public void count() {
         Map<String, Integer> map = new HashMap<>();
         //所有弹幕
         Integer getval = redisService.getval(BarrageConstant.ALLBARRAGE);
         redisService.clean(BarrageConstant.ALLBARRAGE);
-//        log.info("10s弹幕总量统计---->" + getval);
         map.put("allRoom", getval);
         //房间弹幕统计
         List<Job> all = jobService.getAll();
@@ -117,8 +116,7 @@ public class ScheduleConfig {
             Integer roomVal = redisService.getval(j.getRoomid());
             redisService.clean(j.getRoomid());
 
-//            template.convertAndSend("/topic/count/"+j.getRoomid(),roomVal);
-//            log.info(j.getRoomid() + "---->10s弹幕统计---->" + roomVal);
+            template.convertAndSend("/topic/count/"+j.getRoomid(),roomVal);
             map.put(j.getRoomid(), roomVal);
         }
         template.convertAndSend("/topic/barrage/count", JSON.toJSONString(map));

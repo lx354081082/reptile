@@ -16,9 +16,6 @@ public class JobController {
     DouyuTvCrawlThread douyuTvCrawlThread;
     @Autowired
     JobService jobService;
-//    @Autowired
-//    BarrageService barrageService;
-
 
     /**
      * 创建任务
@@ -27,25 +24,14 @@ public class JobController {
     Object rid(@PathVariable("roomid") String roomid) {
         douyuTvCrawlThread.setRoomId(roomid);
         //判断是否有次线程
-        if (jobService.isHave("douyu" + roomid)) {
+        if (jobService.isHave("douyu" + roomid))
             return true;
-        }
-
         Thread thread = new Thread(douyuTvCrawlThread, "douyu" + roomid);
         thread.start();
-
         Job job = new Job();
         job.setRoomid("douyu" + roomid);
         job.setThreadid(thread.getId());
         jobService.save(job);
-
         return true;
     }
-
-
-//    @GetMapping("/barrage/find")
-//    Object fing(String where, Integer roomid, String who) {
-//        barrageService.selectBarrage(where, roomid, who);
-//        return "";
-//    }
 }

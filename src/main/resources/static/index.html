@@ -8,7 +8,17 @@
     <link href="https://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
     <script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.hcharts.cn/highcharts/highcharts.js"></script>
     <script type="text/javascript">
+
+
+        var rooms = ['allRoom'];
+
+        var roomsObj = new Array();
+        $(function () {
+            hcharts()
+        })
         function connect(type,roomid) {
             var socket = new SockJS('/websocket');
             stompClient = Stomp.over(socket);
@@ -63,6 +73,90 @@
         function douyuall() {
             connect('douyu','all');
         }
+
+
+        function hcharts() {
+            //曲线
+            chart = Highcharts.chart('Highcharts', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: '弹幕数量'
+                },
+                xAxis: {
+                    type: 'linear'
+                },
+                yAxis: {
+                    title: {
+                        text: '数量'
+                    }
+                },
+                plotOptions: {
+//                    line: {
+//                        dataLabels: {
+//                            enabled: true          // 开启数据标签
+//                        },
+//                        enableMouseTracking: false // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+//                    }
+                    spline: {
+                        lineWidth: 2,
+                        states: {
+                            hover: {
+                                lineWidth: 3
+                            }
+                        },
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+
+            $.each(rooms, function (i) {
+                // alert(i);
+                var c = chart.addSeries({
+                    name: this,
+                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                });
+                roomsObj.push(c);
+            });
+            var socket = new SockJS('/websocket');
+            stompClient = Stomp.over(socket);
+            // 订阅地址
+            stompClient.connect({}, function (frame) {
+
+                //订阅消息
+                stompClient.subscribe('/topic/barrage/count', function (message) {
+                    addPoin(message.body);
+                });
+            })
+        }
+
+        function addPoin(val) {
+
+            //string转JSON
+            var jsonobj = JSON.parse(val);
+
+            // json.each(function (k,v) {
+            //     alert(k + "======" + v);
+            // });
+            var flg = roomsObj[0].data.length > 30;
+
+            for (k in jsonobj) {
+                for (j = 0; j < rooms.length; j++) {
+                    // alert(rooms[j]+'-----------'+jsonobj[k])
+                    if (rooms[j] == k) {
+                        //添加数据点 false禁止重绘
+                        roomsObj[j].addPoint(jsonobj[k.toString()], false, flg);
+                    }
+                }
+            }
+            //图表重绘
+            chart.redraw();
+        }
+
+
     </script>
 </head>
 <body style="height: 100%">
@@ -122,10 +216,18 @@
                     </div>
                 </nav>
                 <div class="row clearfix" style="height: 100%">
-                    <div class="col-md-12 column"  style="height: 100%">
+                    <div class="col-md-6 column"  style="height: 100%">
                         <div id="toDow" style="overflow:auto;height: 100%;width:100%;padding-top: 50px;box-sizing: border-box">
                             <ul class="list-group" id="dm">
                             </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6 column"  style="height: 100%">
+                        <div id="toDow" style="overflow:auto;height: 100%;width:100%;padding-top: 50px;box-sizing: border-box">
+
+                            <div id="Highcharts" style="width: 100%"></div>
+                            正在运行的任务&nbsp;点击停止任务
+                            <span id="zttable"></span>
                         </div>
                     </div>
                 </div>

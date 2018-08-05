@@ -284,14 +284,14 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
         template.convertAndSend("/topic/douyu/" + rid,
                 "<a href='/userdetail/douyu/" + uid + "'>" + name + ":</a>" + txt);
         template.convertAndSend("/topic/douyu/all",
-                "["+rid+"]<a href='/userdetail/douyu/" + uid + "'>" + name + ":</a>" + txt);
+                "["+rid+"]<a href='/userdetail.html?w=douyu&i=" + uid + "'>" + name + ":</a>" + txt);
 
         //弹幕信息入列(redis)
-//        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
+        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
 
 
-        //弹幕信息入列(ActiveMQ)
-        activemqService.sendMessage("barrage.queue", JSON.toJSONString(new RedisBarrage(BarrageConstant.DOUYU, msg, new Date())));
+//        //弹幕信息入列(ActiveMQ)
+//        activemqService.sendMessage("barrage.queue", JSON.toJSONString(new RedisBarrage(BarrageConstant.DOUYU, msg, new Date())));
     }
     
 

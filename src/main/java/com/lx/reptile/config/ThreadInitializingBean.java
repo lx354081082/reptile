@@ -16,9 +16,6 @@ public class ThreadInitializingBean implements InitializingBean {
     RedisConsumerThread redisConsumerThread;
     @Override
     public void afterPropertiesSet() throws Exception {
-        if (1 == 1) {
-            return;
-        }
         Thread thread = new Thread(redisConsumerThread,"redis任务队列消费线程");
         thread.start();
         log.info("redis任务队列消费线程,启动成功!");

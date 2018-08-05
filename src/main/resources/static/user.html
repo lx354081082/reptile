@@ -56,11 +56,11 @@
                     field: 'username',
                     title: '用户名',
                     formatter: function(value,row,index){
-                        return '<a href="/userdetail/'+id+'/'+row.userid+'">'+row.username+'</a>';
+                        return '<a href="/userdetail.html?w='+id+'&i='+row.userid+'">'+row.username+'</a>';
                     }
                 }, {
-                    field: 'where',
-                    title: '平台'
+                    field: 'level',
+                    title: '等级'
                 } ]
             });
         }

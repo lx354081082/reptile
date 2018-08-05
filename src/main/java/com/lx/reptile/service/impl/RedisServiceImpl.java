@@ -2,6 +2,7 @@ package com.lx.reptile.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.lx.reptile.po.RedisBarrage;
+import com.lx.reptile.pojo.DouyuBarrage;
 import com.lx.reptile.service.RedisService;
 import com.lx.reptile.util.BarrageConstant;
 import lombok.extern.log4j.Log4j;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -86,11 +88,15 @@ public class RedisServiceImpl implements RedisService {
 //            //房间id 自增
 //            barrageAdd(BarrageConstant.PANDA + barrage.getRoomid());
 //        }
-//        if (redisBarrage.getWhere().equals(BarrageConstant.DOUYU)) {
-//            DouyuBarrage barrage = (DouyuBarrage) redisBarrage.getBarrage();
-//            //房间id 自增
-//            barrageAdd(BarrageConstant.DOUYU+barrage.getRoomid());
-//        }
+        if (redisBarrage.getWhere().equals(BarrageConstant.DOUYU)) {
+            try {
+                Map map = (Map) redisBarrage.getBarrage();
+                barrageAdd(BarrageConstant.DOUYU + map.get("rid"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            //房间id 自增
+        }
     }
 
 }

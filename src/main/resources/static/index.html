@@ -113,6 +113,24 @@
                 }
             });
 
+            $.ajax({
+                url: '/job/joblist',
+                type: "get",
+                async: false,
+                data: [],
+                success: function (data) {
+                    $("#zttable").empty();
+                    $(data).each(function () {
+
+                        rooms.push(this.roomid);
+
+                        var txt = '<button type="button" class="btn btn-sm btn-info" onclick="stop(\'' + this.roomid + '\')">' + this.roomid + '</button>&nbsp;'
+                        $("#zttable").prepend(txt);
+                    })
+                }
+
+            });
+
             $.each(rooms, function (i) {
                 // alert(i);
                 var c = chart.addSeries({
@@ -156,7 +174,21 @@
             chart.redraw();
         }
 
-
+        /**
+         * 暂停任务
+         * @param rommid
+         */
+        function stop(rid) {
+            $.ajax({
+                url: '/job/stop/' + rid,
+                type: "get",
+                data: [],
+                success: function (flg) {
+                    alert(flg);
+                    // zttab();
+                }
+            });
+        }
     </script>
 </head>
 <body style="height: 100%">

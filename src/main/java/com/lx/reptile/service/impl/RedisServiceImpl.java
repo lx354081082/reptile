@@ -99,4 +99,8 @@ public class RedisServiceImpl implements RedisService {
         }
     }
 
+//    private void countByRoom(RedisBarrage redisBarrage) {
+//        Boolean add = redisTemplate.boundZSetOps("DMPH").add("rid", 1);
+//    }
+
 }

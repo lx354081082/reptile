@@ -26,17 +26,17 @@ import java.util.Set;
 @Scope("prototype")
 @Slf4j
 public class RedisConsumerThread implements Runnable {
-    @Autowired
-    RedisService redisService;
-    @Autowired
-    BarrageConsumer barrageConsumer;
+//    @Autowired
+//    RedisService redisService;
+//    @Autowired
+//    BarrageConsumer barrageConsumer;
 
 
     @Override
     public void run() {
-        while (!Thread.interrupted()) {
-            RedisBarrage rpop = redisService.rpop(BarrageConstant.BARRAGE);
-            barrageConsumer.rPop(rpop);
-        }
+//        while (!Thread.interrupted()) {
+//            RedisBarrage rpop = redisService.rpop(BarrageConstant.BARRAGE);
+//            barrageConsumer.rPop(rpop);
+//        }
     }
 }

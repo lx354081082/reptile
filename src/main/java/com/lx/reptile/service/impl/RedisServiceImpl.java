@@ -9,6 +9,7 @@ import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,17 @@ public class RedisServiceImpl implements RedisService {
         redisTemplate.opsForList().leftPush(barrage, JSON.toJSONString(redisBarrage));
         //统计弹幕信息
         count(redisBarrage);
+    }
+
+    /**
+     * 消息广播
+     * @param barrage
+     * @param redisBarrage
+     */
+    @Override
+    public void pubLish(String barrage, RedisBarrage redisBarrage) {
+        String s = JSON.toJSONString(redisBarrage);
+        redisTemplate.convertAndSend(barrage, s);
     }
 
     /**
@@ -73,6 +85,7 @@ public class RedisServiceImpl implements RedisService {
         Long size = redisTemplate.opsForList().size(barrage);
         return size;
     }
+
 
 
     /**

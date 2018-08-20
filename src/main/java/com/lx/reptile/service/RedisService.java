@@ -15,4 +15,6 @@ public interface RedisService {
     void clean(String key);
 
     Long rpopSize(String barrage);
+
+    void pubLish(String barrage, RedisBarrage redisBarrage);
 }

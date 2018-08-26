@@ -87,18 +87,6 @@ public class ScheduleConfig {
         log.debug("线程守护-->" + allJob.size() + "个任务正在运行");
     }
 
-    /**
-     * 计划任务(用户表刷新)
-     * To缓存实现
-     */
-//    @Scheduled(fixedRate = 6000000)
-//    public void barrageToUser() {
-//        long start = System.currentTimeMillis();
-//        int i = userService.barrageToUser();
-//        long end = System.currentTimeMillis();
-//
-//        log.info("用户详情更新,处理弹幕数据"+i+"条,用时:"+(end-start)+"ms");
-//    }
 
     /**
      * 统计弹幕

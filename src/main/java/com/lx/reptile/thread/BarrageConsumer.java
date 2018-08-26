@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.lx.reptile.po.RedisBarrage;
 import com.lx.reptile.po.RedisUser;
 import com.lx.reptile.pojo.BrUser;
+import com.lx.reptile.service.DouyuBarrageService;
 import com.lx.reptile.util.BarrageConstant;
 import com.lx.reptile.util.DateFormatUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,8 @@ public class BarrageConsumer {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+    @Autowired
+    private DouyuBarrageService douyuBarrageService;
     //私有全局变量
     private static ArrayList<RedisBarrage> redisBarrages = new ArrayList<>();
 
@@ -46,6 +49,10 @@ public class BarrageConsumer {
      * 持久化弹幕数据
      */
     private void toDb() throws Exception {
+        douyuBarrageService.insert(redisBarrages);
+        if (1==1) {
+            return;
+        }
         StringBuffer douyuSql = new StringBuffer("insert into douyu_barrage (date, roomid, txt, uid) values ");
         Map<String, RedisUser> map = new HashMap<>();
         for (RedisBarrage r : redisBarrages) {
@@ -77,7 +84,6 @@ public class BarrageConsumer {
             if (',' == sql.charAt(sql.length() - 1)) {
                 sql = sql.deleteCharAt(sql.length() - 1);
                 jdbcTemplate.execute(sql.toString());
-                log.info("SQL = "+sql.toString());
             }
         } catch (Exception e) {
             log.error(e.getMessage());

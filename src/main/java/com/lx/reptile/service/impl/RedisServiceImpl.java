@@ -8,6 +8,7 @@ import com.lx.reptile.util.BarrageConstant;
 import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Log4j
 public class RedisServiceImpl implements RedisService {
     @Autowired
-    RedisTemplate redisTemplate;
+    StringRedisTemplate redisTemplate;
     /**
      * 消息入列
      */
@@ -38,6 +39,7 @@ public class RedisServiceImpl implements RedisService {
     public void pubLish(String barrage, RedisBarrage redisBarrage) {
         String s = JSON.toJSONString(redisBarrage);
         redisTemplate.convertAndSend(barrage, s);
+        count(redisBarrage);
     }
 
     /**

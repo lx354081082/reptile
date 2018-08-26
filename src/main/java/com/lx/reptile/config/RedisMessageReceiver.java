@@ -21,8 +21,6 @@ public class RedisMessageReceiver {
     public void receiveMessage(Object message){
         try {
             String str = message.toString();
-            //todo 消息前有乱码
-            str = message.toString().substring(str.indexOf('{'));
             RedisBarrage redisBarrage = JSON.parseObject(str, RedisBarrage.class);
             //持久化
             barrageConsumer.rPop(redisBarrage);

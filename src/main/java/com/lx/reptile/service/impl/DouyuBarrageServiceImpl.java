@@ -37,29 +37,17 @@ public class DouyuBarrageServiceImpl implements DouyuBarrageService {
     @Override
     public void insert(List<RedisBarrage> list) {
         List<Map<String, Object>> barrageList = new ArrayList<>();
-        Map<String, RedisUser> map = new HashMap<>();
+        List<Map<String, Object>> userList = new ArrayList<>();
         for (RedisBarrage r : list) {
             if (r.getWhere().equals(BarrageConstant.DOUYU)) {
                 JSONObject jsonObject = JSON.parseObject(r.getBarrage().toString());
-                barrageList.add(douyuSql(jsonObject, r.getDate(), map));
+                barrageList.add(douyuSql(jsonObject, r.getDate(), userList));
             }
         }
         douyuBarrageMapper.ins(barrageList);
-        if (map.size() > 0) {
-            List<Map<String, Object>> ulist = new ArrayList<>();
-            Set<String> ks = map.keySet();
-            for (String s : ks) {
-                RedisUser redisUser = map.get(s);
-                Map<String, Object> um = new HashMap<>();
-                um.put("uid",s);
-                um.put("level",redisUser.getLevel());
-                um.put("uname",redisUser.getName());
-                ulist.add(um);
-            }
-            douyuUserMapper.replace(ulist);
-        }
+        douyuUserMapper.replace(userList);
     }
-    private Map<String, Object> douyuSql(JSONObject jsonObject, Date date, Map<String, RedisUser> map) {
+    private Map<String, Object> douyuSql(JSONObject jsonObject, Date date, List<Map<String, Object>> userlist) {
         Map<String, Object> bmap = new HashMap<>();
         try {
             //用户名
@@ -85,17 +73,16 @@ public class DouyuBarrageServiceImpl implements DouyuBarrageService {
             try {
                 int i = Integer.parseInt(level);
                 if (i > 0) {
-                    map.put(uid, new RedisUser(uid, name, i));
+                    Map<String, Object> um = new HashMap<>();
+                    um.put("uid",uid);
+                    um.put("level",i);
+                    um.put("uname",name);
+                    userlist.add(um);
                 }
             } catch (Exception e) {
                 log.debug("等级解析失败");
             }
 
-//            StringBuffer sb = new StringBuffer("(");
-//            sb.append("'" +  + "',");
-//            sb.append("'" + rid + "',");
-//            sb.append("'" + stringFmt(txt) + "',");
-//            sb.append("'" + uid + "'),");
             bmap.put("date", DateFormatUtils.fmtToString(date, DateFormatUtils.DATE_TIME_PATTERN));
             bmap.put("roomid", rid);
             bmap.put("txt", txt);

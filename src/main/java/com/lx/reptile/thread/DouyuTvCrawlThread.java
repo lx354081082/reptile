@@ -282,12 +282,11 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
         template.convertAndSend("/topic/douyu/all",
                 "["+rid+"]<a href='/userdetail.html?w=douyu&i=" + uid + "'>" + name + ":</a>" + txt);
 
-        //弹幕信息入列(redis)
-//        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
         //广播
         redisService.pubLish(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
 
-
+        //弹幕信息入列(redis)
+//        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
 //        //弹幕信息入列(ActiveMQ)
 //        activemqService.sendMessage("barrage.queue", JSON.toJSONString(new RedisBarrage(BarrageConstant.DOUYU, msg, new Date())));
     }

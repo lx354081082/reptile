@@ -20,6 +20,7 @@ public class ReptileApplication {
 	@Bean
 	public TaskExecutor primaryTaskExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
 		return executor;
 	}
 }

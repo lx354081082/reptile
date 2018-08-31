@@ -3,18 +3,23 @@ package com.lx.reptile.thread;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.lx.reptile.po.RedisBarrage;
 import com.lx.reptile.service.RedisService;
 import com.lx.reptile.thread.util.panda.PandaTvMessageHandler;
+import com.lx.reptile.util.BarrageConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -22,12 +27,12 @@ import java.util.List;
  * @create: 2018-08-29 10:53
  **/
 @Slf4j
-public class Test {
-//    @Autowired
-//    PandaBarrageService pandaBarrageService;
+@Component
+@Scope("prototype")
+public class PandaTvCrawlThread implements Runnable, Cloneable {
     //WebSocket
     @Autowired
-SimpMessagingTemplate template;
+    SimpMessagingTemplate template;
     @Autowired
     RedisService redisService;
 
@@ -54,6 +59,7 @@ SimpMessagingTemplate template;
 
     /**
      * 初始化一些信息，注意是获取登录弹幕服务器的必要信息
+     *
      * @return 返回结果表示是否初始化成功
      */
     private boolean init() {
@@ -81,7 +87,7 @@ SimpMessagingTemplate template;
             JSONArray chatAddressList = tempJsonObject.getJSONArray("chat_addr_list");
             log.debug("弹幕服务器数据：" + chatAddressList);
             //选第一个服务器登录
-            serverIp = chatAddressList.getString(0).split(":",2)[0];
+            serverIp = chatAddressList.getString(0).split(":", 2)[0];
             port = Integer.parseInt(chatAddressList.getString(0).split(":", 2)[1]);
         } else {
             log.error("获取登录弹幕服务器的必要信息出错,程序将退出");
@@ -95,7 +101,7 @@ SimpMessagingTemplate template;
      * 与弹幕服务器取得联系,相当于登录弹幕服务器
      */
     private void login() throws IOException {
-        socket = new Socket(serverIp,port);
+        socket = new Socket(serverIp, port);
         log.info("登录弹幕服务器:" + serverIp + ":" + port + "成功");
         String msg = "u:" + rid + "@" + appid + "\n" +
                 "k:1\n" +
@@ -115,11 +121,6 @@ SimpMessagingTemplate template;
         outputStream.write(b);
     }
 
-
-    public static void main(String[] args) {
-        Test test = new Test();
-        test.run();
-    }
     public void run() {
         PandaTvMessageHandler pandaTvMessageHandler = null;
         OutputStream outputStream;
@@ -135,7 +136,7 @@ SimpMessagingTemplate template;
             //Thread.interrupted线程结束标记
             while (!Thread.interrupted()) {
                 List<String> messages = pandaTvMessageHandler.read();
-                for (String msg: messages) {
+                for (String msg : messages) {
                     if (msg.equals("")) {
                         continue;
                     }
@@ -147,7 +148,7 @@ SimpMessagingTemplate template;
                             handlerChatmsg(msgJsonObject);
                         } else {
                             //TODO 306礼物
-                            log.info(msgJsonObject.toJSONString());
+//                            log.info(msgJsonObject.toJSONString());
                         }
                     } catch (Exception e) {
                         log.error("获取消息内容时出错：" + msg, e);
@@ -174,7 +175,12 @@ SimpMessagingTemplate template;
         }
     }
 
-//    private void toPoJo(JSONObject msgJsonObject, PandaBarrage pandaBarrage) {
+
+    /**
+     * 弹幕信息处理
+     */
+    private void handlerChatmsg(JSONObject msgJsonObject) {
+//        log.info(msgJsonObject.toJSONString());
 //        String time = msgJsonObject.getString("time");
 //        String nickname = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("nickName");
 //        String rid = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("rid");
@@ -183,42 +189,16 @@ SimpMessagingTemplate template;
 //        String level = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("level");
 //        String identity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("identity");
 //        String spidentity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("sp_identity");
-//        pandaBarrage.setContent(content);
-//        pandaBarrage.setRid(rid);
-//        pandaBarrage.setNickname(nickname);
-//        pandaBarrage.setRoomid(roomid);
-//        pandaBarrage.setDate(DateFormatUtils.parseUnixTimeToData(time));
-//        pandaBarrage.setLevel(Integer.parseInt(level));
-//    }
 
-    /**
-     * 弹幕信息处理
-     */
-    private void handlerChatmsg(JSONObject msgJsonObject) {
-//        log.info(msgJsonObject.toJSONString());
-        String time = msgJsonObject.getString("time");
-        String nickname = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("nickName");
-        String rid = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("rid");
-        String roomid = msgJsonObject.getJSONObject("data").getJSONObject("to").getString("toroom");
-        String content = msgJsonObject.getJSONObject("data").getString("content");
-        String level = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("level");
-        String identity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("identity");
-        String spidentity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("sp_identity");
-
-        log.info(time + "\t" + nickname + "\t" + content + "\t" + level + "\t" + identity + "\t" + spidentity);
-//        PandaBarrage pandaBarrage = new PandaBarrage();
-//        toPoJo(msgJsonObject, pandaBarrage);
-
-//        //持久化
-//        pandaBarrageService.save(pandaBarrage);
-        //webSocket
-//        template.convertAndSend("/topic/panda/" + pandaBarrage.getRoomid(), "<a href='/userdetail/panda/" + pandaBarrage.getRid() + "'>" + pandaBarrage.getNickname() + ":</a>" + pandaBarrage.getContent());
-        //redis
-//        String val = JSON.toJSONString(pandaBarrage);
-//        redisService.saveBarrage("panda" + pandaBarrage.getRoomid(), val);
-
-//        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.PANDA, pandaBarrage));
-//        log.debug(roomid + "[" + nickname + "]:" + content);
+        //广播
+        redisService.pubLish(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.PANDA, msgJsonObject, new Date()));
     }
 
+    /**
+     * 克隆对象 循环创建该类线程会出现多个线程引用同一对象的问题
+     */
+    @Override
+    public PandaTvCrawlThread clone() throws CloneNotSupportedException {
+        return (PandaTvCrawlThread) super.clone();
+    }
 }

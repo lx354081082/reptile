@@ -5,6 +5,7 @@ import com.lx.reptile.pojo.Job;
 import com.lx.reptile.service.JobService;
 import com.lx.reptile.service.RedisService;
 import com.lx.reptile.thread.DouyuTvCrawlThread;
+import com.lx.reptile.thread.PandaTvCrawlThread;
 import com.lx.reptile.util.BarrageConstant;
 import com.lx.reptile.util.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +40,8 @@ public class ScheduleConfig {
 //    SimpMessagingTemplate messagingTemplate;
     @Autowired
     JobService jobService;
-//    @Autowired
-//    PandaTvCrawlThread pandaTvCrawlThread;
+    @Autowired
+    PandaTvCrawlThread pandaTvCrawlThread;
     @Autowired
     DouyuTvCrawlThread douyuTvCrawlThread;
 //    @Autowired
@@ -66,12 +67,12 @@ public class ScheduleConfig {
             } else {
                 //克隆对象 建立线程
                 if (j.getRoomid().indexOf("panda") >= 0) {
-//                    PandaTvCrawlThread clonePandaTvCrawlThread = pandaTvCrawlThread.clone();
-//                    clonePandaTvCrawlThread.setRoomId(j.getRoomid().substring("panda".length()));
-//                    Thread thread = new Thread(clonePandaTvCrawlThread, j.getRoomid());
-//                    thread.start();
-//                    j.setThreadid(thread.getId());
-//                    jobService.update(j);
+                    PandaTvCrawlThread clonePandaTvCrawlThread = pandaTvCrawlThread.clone();
+                    clonePandaTvCrawlThread.setRoomId(j.getRoomid().substring("panda".length()));
+                    Thread thread = new Thread(clonePandaTvCrawlThread, j.getRoomid());
+                    thread.start();
+                    j.setThreadid(thread.getId());
+                    jobService.update(j);
                 } else if (j.getRoomid().indexOf("douyu") >= 0) {
                     //todo
                     DouyuTvCrawlThread cloneDouyuTvCrawlThread = douyuTvCrawlThread.clone();

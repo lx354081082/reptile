@@ -2,6 +2,7 @@ package com.lx.reptile.thread;
 
 import com.lx.reptile.po.RedisBarrage;
 import com.lx.reptile.service.DouyuBarrageService;
+import com.lx.reptile.service.PandaBarragesService;
 import com.lx.reptile.util.BarrageConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ public class BarrageConsumer {
     JdbcTemplate jdbcTemplate;
     @Autowired
     private DouyuBarrageService douyuBarrageService;
+    @Autowired
+    private PandaBarragesService pandaBarragesService;
     //私有全局变量
     private static ArrayList<RedisBarrage> douyuBarrages = new ArrayList<>();
     private static ArrayList<RedisBarrage> pandaBarrages = new ArrayList<>();
@@ -29,7 +32,7 @@ public class BarrageConsumer {
         if (redisBarrage.getWhere().equals(BarrageConstant.PANDA)) {
             pandaBarrages.add(redisBarrage);
         }
-        if (douyuBarrages.size() >= 500) {
+        if (douyuBarrages.size() >= 200) {
             try {
                 toDb(BarrageConstant.DOUYU);
             } catch (Exception e) {
@@ -37,7 +40,7 @@ public class BarrageConsumer {
             }
             douyuBarrages.clear();
         }
-        if (pandaBarrages.size() >= 500) {
+        if (pandaBarrages.size() >= 200) {
             try {
                 toDb(BarrageConstant.PANDA);
             } catch (Exception e) {
@@ -55,7 +58,7 @@ public class BarrageConsumer {
             douyuBarrageService.insert(douyuBarrages);
         }
         if (where.equals(BarrageConstant.PANDA)) {
-
+            pandaBarragesService.insert(pandaBarrages);
         }
     }
 }

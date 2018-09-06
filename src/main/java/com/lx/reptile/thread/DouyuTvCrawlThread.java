@@ -275,6 +275,7 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
             txt = txt.substring(1, txt.length() - 2);
             log.debug(e.getMessage());
         }
+        log.info("斗鱼弹幕："+txt);
 
         //webSocket send
         template.convertAndSend("/topic/douyu/" + rid,

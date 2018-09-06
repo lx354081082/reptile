@@ -185,11 +185,11 @@ public class PandaTvCrawlThread implements Runnable, Cloneable {
 //        String nickname = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("nickName");
 //        String rid = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("rid");
 //        String roomid = msgJsonObject.getJSONObject("data").getJSONObject("to").getString("toroom");
-//        String content = msgJsonObject.getJSONObject("data").getString("content");
 //        String level = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("level");
 //        String identity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("identity");
 //        String spidentity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("sp_identity");
-
+        String content = msgJsonObject.getJSONObject("data").getString("content");
+        log.info("熊猫弹幕:" + content);
         //广播
         redisService.pubLish(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.PANDA, msgJsonObject, new Date()));
     }

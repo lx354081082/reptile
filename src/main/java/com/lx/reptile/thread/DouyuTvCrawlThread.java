@@ -279,8 +279,8 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
         //webSocket send
         template.convertAndSend("/topic/douyu/" + rid,
                 "<a href='/userdetail/douyu/" + uid + "'>" + name + ":</a>" + txt);
-        template.convertAndSend("/topic/douyu/all",
-                "["+rid+"]<a href='/userdetail.html?w=douyu&i=" + uid + "'>" + name + ":</a>" + txt);
+        template.convertAndSend("/topic/all",
+                "douyu["+rid+"]<a href='/userdetail.html?w=douyu&i=" + uid + "'>" + name + ":</a>" + txt);
 
         //广播
         redisService.pubLish(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));

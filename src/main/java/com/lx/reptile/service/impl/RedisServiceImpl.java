@@ -1,6 +1,7 @@
 package com.lx.reptile.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.lx.reptile.po.RedisBarrage;
 import com.lx.reptile.pojo.DouyuBarrage;
 import com.lx.reptile.service.RedisService;
@@ -97,12 +98,16 @@ public class RedisServiceImpl implements RedisService {
         //弹幕总数++
         barrageAdd(BarrageConstant.ALLBARRAGE);
 
-//        //根据房间id统计
-//        if (redisBarrage.getWhere().equals(BarrageConstant.PANDA)) {
-//            PandaBarrage barrage = (PandaBarrage) redisBarrage.getBarrage();
-//            //房间id 自增
-//            barrageAdd(BarrageConstant.PANDA + barrage.getRoomid());
-//        }
+        //根据房间id统计
+        if (redisBarrage.getWhere().equals(BarrageConstant.PANDA)) {
+            try {
+                JSONObject map = (JSONObject) redisBarrage.getBarrage();
+                //房间id 自增
+                barrageAdd(BarrageConstant.PANDA + map.getJSONObject("data").getJSONObject("to").getString("toroom"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         if (redisBarrage.getWhere().equals(BarrageConstant.DOUYU)) {
             try {
                 Map map = (Map) redisBarrage.getBarrage();
@@ -110,12 +115,7 @@ public class RedisServiceImpl implements RedisService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            //房间id 自增
         }
     }
-
-//    private void countByRoom(RedisBarrage redisBarrage) {
-//        Boolean add = redisTemplate.boundZSetOps("DMPH").add("rid", 1);
-//    }
 
 }

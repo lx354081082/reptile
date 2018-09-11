@@ -182,16 +182,22 @@ public class PandaTvCrawlThread implements Runnable, Cloneable {
     private void handlerChatmsg(JSONObject msgJsonObject) {
 //        log.info(msgJsonObject.toJSONString());
 //        String time = msgJsonObject.getString("time");
-//        String nickname = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("nickName");
-//        String rid = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("rid");
+        String nickname = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("nickName");
+        String uid = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("rid");
 //        String roomid = msgJsonObject.getJSONObject("data").getJSONObject("to").getString("toroom");
-//        String content = msgJsonObject.getJSONObject("data").getString("content");
+        String content = msgJsonObject.getJSONObject("data").getString("content");
 //        String level = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("level");
 //        String identity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("identity");
 //        String spidentity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("sp_identity");
 
         //广播
         redisService.pubLish(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.PANDA, msgJsonObject, new Date()));
+
+
+        template.convertAndSend("/topic/panda/" + roomId,
+                "<a href='/userdetail/panda/" + uid + "'>" + nickname + ":</a>" + content);
+        template.convertAndSend("/topic/all",
+                "panda[" + roomId + "]<a href='/userdetail.html?w=panda&i=" + uid + "'>" + nickname + ":</a>" + content);
     }
 
     /**

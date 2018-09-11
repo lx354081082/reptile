@@ -9,9 +9,6 @@ import com.lx.reptile.thread.PandaTvCrawlThread;
 import com.lx.reptile.util.BarrageConstant;
 import com.lx.reptile.util.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.hyperic.sigar.Cpu;
-import org.hyperic.sigar.CpuPerc;
-import org.hyperic.sigar.Mem;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +17,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
-import java.math.RoundingMode;
-import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +31,7 @@ import java.util.Map;
 public class ScheduleConfig {
     @Autowired
     SimpMessagingTemplate template;
-//    @Autowired
+    //    @Autowired
 //    SimpMessagingTemplate messagingTemplate;
     @Autowired
     JobService jobService;
@@ -44,7 +39,7 @@ public class ScheduleConfig {
     PandaTvCrawlThread pandaTvCrawlThread;
     @Autowired
     DouyuTvCrawlThread douyuTvCrawlThread;
-//    @Autowired
+    //    @Autowired
 //    UserService userService;
     @Autowired
     RedisService redisService;
@@ -105,7 +100,7 @@ public class ScheduleConfig {
             Integer roomVal = redisService.getval(j.getRoomid());
             redisService.clean(j.getRoomid());
 
-            template.convertAndSend("/topic/count/"+j.getRoomid(),roomVal);
+            template.convertAndSend("/topic/count/" + j.getRoomid(), roomVal);
             map.put(j.getRoomid(), roomVal);
         }
         template.convertAndSend("/topic/barrage/count", JSON.toJSONString(map));
@@ -113,6 +108,7 @@ public class ScheduleConfig {
 
     /**
      * 系统状态
+     *
      * @throws SigarException
      */
     @Scheduled(fixedRate = 2000)

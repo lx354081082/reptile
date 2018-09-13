@@ -12,15 +12,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @MapperScan("com.lx.reptile.mapper")
 public class ReptileApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ReptileApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ReptileApplication.class, args);
+    }
 
-	@Primary
-	@Bean
-	public TaskExecutor primaryTaskExecutor() {
-		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-
-		return executor;
-	}
+    @Primary
+    @Bean
+    public TaskExecutor primaryTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        return executor;
+    }
 }

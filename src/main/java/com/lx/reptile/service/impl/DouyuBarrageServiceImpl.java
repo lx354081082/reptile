@@ -47,6 +47,7 @@ public class DouyuBarrageServiceImpl implements DouyuBarrageService {
         douyuBarrageMapper.ins(barrageList);
         douyuUserMapper.replace(userList);
     }
+
     private Map<String, Object> douyuSql(JSONObject jsonObject, Date date, List<Map<String, Object>> userlist) {
         Map<String, Object> bmap = new HashMap<>();
         try {
@@ -74,9 +75,9 @@ public class DouyuBarrageServiceImpl implements DouyuBarrageService {
                 int i = Integer.parseInt(level);
                 if (i > 0) {
                     Map<String, Object> um = new HashMap<>();
-                    um.put("uid",uid);
-                    um.put("level",i);
-                    um.put("uname",name);
+                    um.put("uid", uid);
+                    um.put("level", i);
+                    um.put("uname", name);
                     userlist.add(um);
                 }
             } catch (Exception e) {

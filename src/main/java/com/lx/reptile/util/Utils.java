@@ -4,13 +4,15 @@ import java.util.Date;
 import java.util.Random;
 
 /**
- * Created by geekgao on 16-1-29.
+ * Created on 16-1-29.
  */
 public class Utils {
     private static Random random;
-    static{
-        random = new Random(Long.parseLong(DateFormatUtils.fmtToString(new Date(),"yyyyMMddHHmmssSSS")));
+
+    static {
+        random = new Random(Long.parseLong(DateFormatUtils.fmtToString(new Date(), "yyyyMMddHHmmssSSS")));
     }
+
     /**
      * 将包含unicode的字符串 转 中文字符串
      * 将每个unicode编码计算出其值，再强转成char类型，然后将这个字符存储到字符串中
@@ -44,6 +46,6 @@ public class Utils {
     public static String getId() {
         String yyyyMMddHHmmssfff = DateFormatUtils.fmtToString(new Date(), "yyyyMMddHHmmssSSS");
 
-        return yyyyMMddHHmmssfff+random.nextInt(10000);
+        return yyyyMMddHHmmssfff + random.nextInt(10000);
     }
 }

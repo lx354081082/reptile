@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class RedisServiceImpl implements RedisService {
     @Autowired
     StringRedisTemplate redisTemplate;
+
     /**
      * 消息入列
      */
@@ -33,6 +34,7 @@ public class RedisServiceImpl implements RedisService {
 
     /**
      * 消息广播
+     *
      * @param barrage
      * @param redisBarrage
      */
@@ -75,7 +77,7 @@ public class RedisServiceImpl implements RedisService {
         try {
             s = redisTemplate.boundValueOps(key).get(0, -1);
         } catch (Exception e) {
-            log.error("redis Read Error ："+e.getMessage());
+            log.error("redis Read Error ：" + e.getMessage());
         }
         try {
             return Integer.parseInt(s);
@@ -83,6 +85,7 @@ public class RedisServiceImpl implements RedisService {
             return 0;
         }
     }
+
     @Override
     public void clean(String key) {
         redisTemplate.delete(key);
@@ -93,7 +96,6 @@ public class RedisServiceImpl implements RedisService {
         Long size = redisTemplate.opsForList().size(barrage);
         return size;
     }
-
 
 
     /**

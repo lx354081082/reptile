@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 
+/**
+ * 弹幕消息持久化处理
+ */
 @Component
 @Slf4j
 public class BarrageConsumer {

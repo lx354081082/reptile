@@ -13,7 +13,7 @@ public class ThreadUtils {
         //返回所有活动线程的堆栈跟踪图。
         Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
         Set<Thread> threads = allStackTraces.keySet();
-        for (Thread t:threads) {
+        for (Thread t : threads) {
             String name = t.getName();
             if (threadName.equals(name)) {
                 return false;
@@ -31,7 +31,7 @@ public class ThreadUtils {
         Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
         Set<Thread> threads = allStackTraces.keySet();
         Boolean flg = false;
-        for (Thread t:threads) {
+        for (Thread t : threads) {
             if (threadName.equals(t.getName())) {
                 t.interrupt();
                 flg = true;
@@ -46,7 +46,7 @@ public class ThreadUtils {
     public static synchronized boolean interruptThreadByThreadId(Long threadId) {
         Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
         Set<Thread> threads = allStackTraces.keySet();
-        for (Thread t:threads) {
+        for (Thread t : threads) {
             if (threadId.equals(t.getId())) {
                 t.interrupt();
                 return true;
@@ -61,7 +61,7 @@ public class ThreadUtils {
     public static synchronized String isRunnableByThreadId(Long threadid) {
         Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
         Set<Thread> threads = allStackTraces.keySet();
-        for (Thread t:threads) {
+        for (Thread t : threads) {
             if (threadid.equals(t.getId())) {
                 return t.getName();
             }

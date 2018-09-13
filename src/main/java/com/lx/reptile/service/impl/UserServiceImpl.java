@@ -21,9 +21,9 @@ public class UserServiceImpl implements UserService {
     public PageBean<Map> selectUserByWhere(String where, String username, Integer offset, Integer limit) {
         PageBean<Map> pageBean = new PageBean<>();
         if (where.equals(BarrageConstant.DOUYU)) {
-            List<Map> objects = douyuUserMapper.selectByName("%"+username+"%", offset, limit);
+            List<Map> objects = douyuUserMapper.selectByName("%" + username + "%", offset, limit);
             pageBean.setRows(objects);
-            pageBean.setTotal(douyuUserMapper.selectCountByName("%"+username+"%"));
+            pageBean.setTotal(douyuUserMapper.selectCountByName("%" + username + "%"));
         }
 //        if (where.equals(BarrageConstant.PANDA)) {
 //            List<Object[]> objects = pandaUserRepository.selectByName(username, offset, limit);

@@ -16,7 +16,7 @@ public class BarrageServiceImpl implements BarrageService {
     @Override
     public PageBean<Map> selectByUid(String where, String uid, Integer offset, Integer limit) {
         PageBean<Map> pb = new PageBean<>();
-pb.setRows(barrageMapper.getByUidAndwhere(where,uid,offset,limit));
+        pb.setRows(barrageMapper.getByUidAndwhere(where, uid, offset, limit));
         return pb;
     }
 }

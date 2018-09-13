@@ -36,7 +36,7 @@ public class PandaBarragesServiceImpl implements PandaBarragesService {
         List<Map<String, Object>> userList = new ArrayList<>();
         for (RedisBarrage r : pandaBarrages) {
             JSONObject msgJsonObject = (JSONObject) r.getBarrage();
-            praceObj(msgJsonObject,barrageList,userList);
+            praceObj(msgJsonObject, barrageList, userList);
         }
         pandaBarrageMapper.ins(barrageList);
         pandaUserMapper.replace(userList);
@@ -62,7 +62,7 @@ public class PandaBarragesServiceImpl implements PandaBarragesService {
             bmap.put("txt", content);
             bmap.put("roomid", roomid);
             bmap.put("uid", rid);
-            bmap.put("date", DateFormatUtils.fmtToString(l > 0 ? new Date(l*1000) : new Date(), DateFormatUtils.DATE_TIME_PATTERN));
+            bmap.put("date", DateFormatUtils.fmtToString(l > 0 ? new Date(l * 1000) : new Date(), DateFormatUtils.DATE_TIME_PATTERN));
             barrageList.add(bmap);
             Map<String, Object> umap = new HashMap<>();
             umap.put("uid", rid);

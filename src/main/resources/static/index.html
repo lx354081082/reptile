@@ -12,33 +12,33 @@
     <script src="https://cdn.hcharts.cn/highcharts/highcharts.js"></script>
     <script type="text/javascript">
 
+        setTimeout(function (args) {
+            cl()
+        },1500)
 
         var rooms = ['allRoom'];
 
         var roomsObj = new Array();
         $(function () {
             hcharts()
-        })
+        });
 
         function cl() {
             var socket = new SockJS('/websocket');
             stompClient = Stomp.over(socket);
             //订阅新地址
             stompClient.connect({}, function (frame) {
-
                 //订阅消息
                 stompClient.subscribe('/topic/all', function (message) {
                     showMessage(message.body);
                 });
             })
         }
-
         function connect(type, roomid) {
             var socket = new SockJS('/websocket');
             stompClient = Stomp.over(socket);
             //订阅新地址
             stompClient.connect({}, function (frame) {
-
                 //订阅消息
                 stompClient.subscribe('/topic/' + type + '/' + roomid, function (message) {
                     showMessage(message.body);
@@ -85,10 +85,6 @@
                     connect(who, rid);
                 }
             );
-        }
-
-        function douyuall() {
-            cl();
         }
 
 
@@ -249,7 +245,7 @@
                             </select>
                             <button type="button" class="btn btn-default" onclick="run()">start</button>
 
-                            <button type="button" class="btn btn-default" onclick="douyuall()">douyuall</button>
+                            <button type="button" class="btn btn-default" onclick="cl()">douyuall</button>
                         </form>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
@@ -277,6 +273,75 @@
                         <div id="Highcharts" style="width: 100%"></div>
                         正在运行的任务&nbsp;点击停止任务
                         <span id="zttable"></span>
+                        <div>
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>
+                                        编号
+                                    </th>
+                                    <th>
+                                        type
+                                    </th>
+                                    <th>
+                                        val
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody id="systeminfo">
+                                <script type="text/javascript">
+                                    //延迟1s连接
+                                    setTimeout(function (args) {
+                                        var socket = new SockJS('/websocket');
+                                        stompClient = Stomp.over(socket);
+                                        //订阅新地址
+                                        stompClient.connect({}, function (frame) {
+
+                                            //订阅消息
+                                            stompClient.subscribe('/topic/sys/data', function (message) {
+                                                var sys = $.parseJSON(message.body);
+                                                $("#systeminfo").empty();
+                                                var i = 1;
+                                                $("#systeminfo").append(
+                                                    "<tr class=\"info\">\n" +
+                                                    "<td>\n" +
+                                                    "    " + i + "\n" +
+                                                    "</td>\n" +
+                                                    "<td>\n" +
+                                                    "    RAM\n" +
+                                                    "</td>\n" +
+                                                    "<td>\n" +
+                                                    "    \n" + sys.ram +
+                                                    "</td>\n" +
+                                                    "</tr>"
+                                                );
+                                                i++;
+                                                for (var j = 0; j < sys.cpusize; j++) {
+                                                    $("#systeminfo").append(
+                                                        "<tr class=\"info\">\n" +
+                                                        "<td>\n" +
+                                                        "    " + i + "\n" +
+                                                        "</td>\n" +
+                                                        "<td>\n" +
+                                                        "    CPU" + j + "\n" +
+                                                        "</td>\n" +
+                                                        "<td>\n" +
+                                                        "    \n" + sys['cpu' + j] +
+                                                        "</td>\n" +
+                                                        "</tr>"
+                                                    );
+                                                    i++;
+                                                }
+                                            });
+                                        })
+                                    }, 1000);
+
+                                </script>
+
+
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

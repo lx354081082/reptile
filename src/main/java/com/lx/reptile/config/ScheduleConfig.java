@@ -9,6 +9,9 @@ import com.lx.reptile.thread.PandaTvCrawlThread;
 import com.lx.reptile.util.BarrageConstant;
 import com.lx.reptile.util.ThreadUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.hyperic.sigar.Cpu;
+import org.hyperic.sigar.CpuPerc;
+import org.hyperic.sigar.Mem;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,32 +118,33 @@ public class ScheduleConfig {
      */
     @Scheduled(fixedRate = 2000)
     public void sys() throws SigarException {
-//        try {
-//            Map<String, Object> map = new HashMap<>();
-//            Mem mem = sigar.getMem();
-//            // 当前内存使用量
-//            long l = mem.getUsed() / 1024L / 1024L;
-//            map.put("ram", l);
-//
-//            Cpu cpu = sigar.getCpu();
-//            CpuPerc cpuList[] = sigar.getCpuPercList();
-//            for (int i = 0; i < cpuList.length; i++) {
-//                NumberFormat nf = NumberFormat.getNumberInstance();
-//                // 保留两位小数
-//                nf.setMaximumFractionDigits(2);
-//                // 如果不需要四舍五入，可以使用RoundingMode.DOWN
-//                nf.setRoundingMode(RoundingMode.UP);
-//                String format = nf.format(cpuList[i].getCombined() * 100.0D);
-//                Double d = Double.parseDouble(format);
-//                //cpu使用量
-//                map.put("cpu" + i, d);
-//            }
-//
-//            template.convertAndSend("/topic/sys/data", JSON.toJSONString(map));
-//
-//        } catch (Exception e) {
-//            log.error(e.getLocalizedMessage());
-//        }
+        NumberFormat nf = NumberFormat.getNumberInstance();
+        // 保留两位小数
+        nf.setMaximumFractionDigits(2);
+        // 如果不需要四舍五入，可以使用RoundingMode.DOWN
+        nf.setRoundingMode(RoundingMode.UP);
+        try {
+            Map<String, Object> map = new HashMap<>();
+            Mem mem = sigar.getMem();
+            long total = mem.getTotal() / 1024L / 1024L;
+            long l = mem.getUsed() / 1024L / 1024L;
+            String format1 = nf.format(Double.valueOf(l + "") / Double.valueOf(total + "") * 100.0D);
+            // 内存使用百分比
+            map.put("ram", format1);
+            Cpu cpu = sigar.getCpu();
+            CpuPerc cpuList[] = sigar.getCpuPercList();
+            for (int i = 0; i < cpuList.length; i++) {
+                String format = nf.format(cpuList[i].getCombined() * 100.0D);
+                Double d = Double.parseDouble(format);
+                //cpu使用量
+                map.put("cpu" + i, d);
+            }
+            map.put("cpusize", cpuList.length);
+            template.convertAndSend("/topic/sys/data", JSON.toJSONString(map));
+
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage());
+        }
 
     }
 

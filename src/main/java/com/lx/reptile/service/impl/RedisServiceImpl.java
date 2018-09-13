@@ -71,7 +71,12 @@ public class RedisServiceImpl implements RedisService {
          * 第一，采用StringRedisSerializer序列化其值。
          * 第二，采用boundValueOps(key).get(0,-1)获取计数key的值
          */
-        String s = redisTemplate.boundValueOps(key).get(0, -1);
+        String s = null;
+        try {
+            s = redisTemplate.boundValueOps(key).get(0, -1);
+        } catch (Exception e) {
+            log.error("redis Read Error ："+e.getMessage());
+        }
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {

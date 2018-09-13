@@ -4,7 +4,8 @@ server:
 #    max-http-post-size: 10
 logging:
   path: /java/log
-  level: error
+  level:
+    com: WARN
 spring:
   thymeleaf:
     cache: false

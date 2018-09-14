@@ -1,7 +1,6 @@
 package com.lx.reptile.thread;
 
 import com.lx.reptile.po.RedisBarrage;
-import com.lx.reptile.service.ActivemqService;
 import com.lx.reptile.service.RedisService;
 import com.lx.reptile.thread.util.douyu.DyMessage;
 import com.lx.reptile.thread.util.douyu.MsgView;
@@ -28,11 +27,11 @@ import java.util.Map;
 @Slf4j
 @Component
 @Scope("prototype")
-public class DouyuTvCrawlThread implements Runnable,Cloneable {
+public class DouyuTvCrawlThread implements Runnable, Cloneable {
     //WebSocket
     @Autowired
     SimpMessagingTemplate template;
-//    @Autowired
+    //    @Autowired
 //    DouyuBarrageService douyuBarrageService;
     @Autowired
     RedisService redisService;
@@ -87,7 +86,7 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
                     }
                 }
             }
-        },roomId+"心跳包");
+        }, roomId + "心跳包");
         keep.start();
         //判断当前进程结束标记 and 心跳包进程是否在运行
         while (!Thread.interrupted() && keep.isAlive()) {
@@ -122,10 +121,10 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
         try {
             ots.write(joinGroupRequest, 0, joinGroupRequest.length);
             ots.flush();
-            log.debug("加入弹幕池"+groupId+"成功");
+            log.debug("加入弹幕池" + groupId + "成功");
         } catch (IOException e) {
             e.printStackTrace();
-            log.error("加入弹幕池"+groupId+"失败");
+            log.error("加入弹幕池" + groupId + "失败");
         }
     }
 
@@ -167,7 +166,7 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
             socket = new Socket(host, port);
             //设置socket输入及输出
             ots = new BufferedOutputStream(socket.getOutputStream());
-            ins= new BufferedInputStream(socket.getInputStream());
+            ins = new BufferedInputStream(socket.getInputStream());
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -180,11 +179,11 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
      */
     public void keepAlive() throws IOException {
         //获取与弹幕服务器保持心跳的请求数据包
-        byte[] keepAliveRequest = DyMessage.getKeepAliveData((int)(System.currentTimeMillis() / 1000));
-            //向弹幕服务器发送心跳请求数据包
-            ots.write(keepAliveRequest, 0, keepAliveRequest.length);
-            ots.flush();
-            log.debug("心跳包发送成功");
+        byte[] keepAliveRequest = DyMessage.getKeepAliveData((int) (System.currentTimeMillis() / 1000));
+        //向弹幕服务器发送心跳请求数据包
+        ots.write(keepAliveRequest, 0, keepAliveRequest.length);
+        ots.flush();
+        log.debug("心跳包发送成功");
 
     }
 
@@ -207,11 +206,15 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
             //根据TCP协议获取返回信息中的字符串信息
             dataStr = new String(realBuf, 12, realBuf.length - 12);
 
+
+            //todo 黏包处理异常写入
             //循环处理socekt黏包情况
-            while(dataStr.lastIndexOf("type@=") > 5){
+            while (dataStr.lastIndexOf("type@=") > 5) {
+                log.info("处理黏包======》"+dataStr.lastIndexOf("type@=") +"===>"+ dataStr);
                 //对黏包中最后一个数据包进行解析
                 MsgView msgView = new MsgView(StringUtils.substring(dataStr, dataStr.lastIndexOf("type@=")));
-                //分析该包的数据类型，以及根据需要进行业务操作
+//                分析该包的数据类型，以及根据需要进行业务操作
+
                 parseServerMsg(msgView.getMessageList());
                 //处理黏包中的剩余部分
                 dataStr = StringUtils.substring(dataStr, 0, dataStr.lastIndexOf("type@=") - 12);
@@ -219,23 +222,25 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
             //对单一数据包进行解析
             MsgView msgView = new MsgView(StringUtils.substring(dataStr, dataStr.lastIndexOf("type@=")));
             //分析该包的数据类型，以及根据需要进行业务操作
+            log.info("完成====》"+dataStr);
             parseServerMsg(msgView.getMessageList());
-
         } catch (Exception e) {
             //结束线程
             return;
         }
 
     }
+
     /**
      * 解析从服务器接受的信息，并根据需要订制业务需求
      */
-    private void parseServerMsg(Map<String, Object> msg){
-        if(msg.get("type") != null){
+    private void parseServerMsg(Map<String, Object> msg) {
+
+        if (msg.get("type") != null) {
 
             //服务器反馈错误信息
-            if(msg.get("type").equals("error")){
-                log.debug(msg.toString());
+            if (msg.get("type").equals("error")) {
+                log.debug("错误消息===>" + msg.toString());
             }
 
             /***@TODO 根据业务需求来处理获取到的所有弹幕及礼物信息***********/
@@ -280,18 +285,18 @@ public class DouyuTvCrawlThread implements Runnable,Cloneable {
         //webSocket send
         template.convertAndSend("/topic/douyu/" + rid,
                 "<a href='/userdetail/douyu/" + uid + "'>" + name + ":</a>" + txt);
-        template.convertAndSend("/topic/douyu/all",
-                "["+rid+"]<a href='/userdetail.html?w=douyu&i=" + uid + "'>" + name + ":</a>" + txt);
+        template.convertAndSend("/topic/all",
+                "douyu[" + rid + "]<a href='/userdetail.html?w=douyu&i=" + uid + "'>" + name + ":</a>" + txt);
 
         //广播
-        redisService.pubLish(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
+        redisService.pubLish(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg, new Date()));
 
         //弹幕信息入列(redis)
 //        redisService.lPush(BarrageConstant.BARRAGE, new RedisBarrage(BarrageConstant.DOUYU, msg,new Date()));
 //        //弹幕信息入列(ActiveMQ)
 //        activemqService.sendMessage("barrage.queue", JSON.toJSONString(new RedisBarrage(BarrageConstant.DOUYU, msg, new Date())));
     }
-    
+
 
     /**
      * 克隆对象 循环创建该类线程会出现多个线程引用同一对象的问题

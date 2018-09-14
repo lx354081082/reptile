@@ -1,18 +1,21 @@
 package com.lx.reptile.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.lx.reptile.po.RedisBarrage;
-import com.lx.reptile.pojo.DouyuBarrage;
+import com.lx.reptile.pojo.Job;
 import com.lx.reptile.service.RedisService;
 import com.lx.reptile.util.BarrageConstant;
 import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import redis.clients.jedis.Jedis;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -20,8 +23,12 @@ import java.util.concurrent.TimeUnit;
 public class RedisServiceImpl implements RedisService {
     @Autowired
     StringRedisTemplate redisTemplate;
+
     /**
      * 消息入列
+     *
+     * @param barrage
+     * @param redisBarrage
      */
     @Override
     public void lPush(String barrage, RedisBarrage redisBarrage) {
@@ -32,14 +39,49 @@ public class RedisServiceImpl implements RedisService {
 
     /**
      * 消息广播
+     *
      * @param barrage
      * @param redisBarrage
      */
     @Override
-    public void pubLish(String barrage, RedisBarrage redisBarrage) {
+    public synchronized void pubLish(String barrage, RedisBarrage redisBarrage) {
         String s = JSON.toJSONString(redisBarrage);
         redisTemplate.convertAndSend(barrage, s);
         count(redisBarrage);
+    }
+
+    /**
+     * 清空 更新指定hash
+     *
+     * @param key
+     * @param list
+     */
+    @Override
+    public void cleanUpdateHash(String key, List<Job> list) {
+        //清空指定域
+        redisTemplate.delete(key);
+        //更新hash信息
+        for (Job job : list) {
+            redisTemplate.opsForHash().put(key, job.getRoomid(), job.getThreadid().toString());
+        }
+    }
+
+    /**
+     * 获取指定hash全部信息
+     *
+     * @param key
+     * @return
+     */
+    @Override
+    public Map<String, Object> getHash(String key) {
+        Map<String, Object> map = new HashMap<>();
+        Set<Object> keys = redisTemplate.opsForHash().keys(key);
+        Iterator<Object> iterator = keys.iterator();
+        while (iterator.hasNext()) {
+            String next = (String) iterator.next();
+            map.put(next, redisTemplate.opsForHash().get(key, next));
+        }
+        return map;
     }
 
     /**
@@ -70,13 +112,19 @@ public class RedisServiceImpl implements RedisService {
          * 第一，采用StringRedisSerializer序列化其值。
          * 第二，采用boundValueOps(key).get(0,-1)获取计数key的值
          */
-        String s = redisTemplate.boundValueOps(key).get(0, -1);
+        String s = null;
+        try {
+            s = redisTemplate.boundValueOps(key).get(0, -1);
+        } catch (Exception e) {
+            log.error("redis Read Error ：" + e.getMessage());
+        }
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
             return 0;
         }
     }
+
     @Override
     public void clean(String key) {
         redisTemplate.delete(key);
@@ -89,7 +137,6 @@ public class RedisServiceImpl implements RedisService {
     }
 
 
-
     /**
      * 统计弹幕信息
      */
@@ -97,12 +144,16 @@ public class RedisServiceImpl implements RedisService {
         //弹幕总数++
         barrageAdd(BarrageConstant.ALLBARRAGE);
 
-//        //根据房间id统计
-//        if (redisBarrage.getWhere().equals(BarrageConstant.PANDA)) {
-//            PandaBarrage barrage = (PandaBarrage) redisBarrage.getBarrage();
-//            //房间id 自增
-//            barrageAdd(BarrageConstant.PANDA + barrage.getRoomid());
-//        }
+        //根据房间id统计
+        if (redisBarrage.getWhere().equals(BarrageConstant.PANDA)) {
+            try {
+                JSONObject map = (JSONObject) redisBarrage.getBarrage();
+                //房间id 自增
+                barrageAdd(BarrageConstant.PANDA + map.getJSONObject("data").getJSONObject("to").getString("toroom"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         if (redisBarrage.getWhere().equals(BarrageConstant.DOUYU)) {
             try {
                 Map map = (Map) redisBarrage.getBarrage();
@@ -110,12 +161,7 @@ public class RedisServiceImpl implements RedisService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            //房间id 自增
         }
     }
-
-//    private void countByRoom(RedisBarrage redisBarrage) {
-//        Boolean add = redisTemplate.boundZSetOps("DMPH").add("rid", 1);
-//    }
 
 }

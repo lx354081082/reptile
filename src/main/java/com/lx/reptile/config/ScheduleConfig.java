@@ -23,8 +23,10 @@ import org.springframework.stereotype.Controller;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * webSocket
@@ -36,7 +38,7 @@ import java.util.Map;
 public class ScheduleConfig {
     @Autowired
     SimpMessagingTemplate template;
-//    @Autowired
+    //    @Autowired
 //    SimpMessagingTemplate messagingTemplate;
     @Autowired
     JobService jobService;
@@ -44,7 +46,7 @@ public class ScheduleConfig {
     PandaTvCrawlThread pandaTvCrawlThread;
     @Autowired
     DouyuTvCrawlThread douyuTvCrawlThread;
-//    @Autowired
+    //    @Autowired
 //    UserService userService;
     @Autowired
     RedisService redisService;
@@ -53,11 +55,18 @@ public class ScheduleConfig {
 
 
     /**
-     * 计划任务 线程守护
+     * 爬虫线程守护
+     * 任务信息缓存
      */
     @Scheduled(fixedRate = 60000)
     public void callback() throws CloneNotSupportedException {
         List<Job> allJob = jobService.getAll();
+        try {
+            //Job信息缓存到Redis
+            redisService.cleanUpdateHash(BarrageConstant.JOBHASH, allJob);
+        } catch (Exception e) {
+            log.error("Job缓存异常" + e.getMessage());
+        }
         for (Job j : allJob) {
             //通过线程id 获取线程name 没有返回null
             String threadName = ThreadUtils.isRunnableByThreadId(j.getThreadid());
@@ -100,49 +109,66 @@ public class ScheduleConfig {
         redisService.clean(BarrageConstant.ALLBARRAGE);
         map.put("allRoom", getval);
         //房间弹幕统计
-        List<Job> all = jobService.getAll();
-        for (Job j : all) {
-            Integer roomVal = redisService.getval(j.getRoomid());
-            redisService.clean(j.getRoomid());
-
-            template.convertAndSend("/topic/count/"+j.getRoomid(),roomVal);
-            map.put(j.getRoomid(), roomVal);
+        try {
+            //Redis中读取缓存信息
+            Map<String, Object> jobHash = redisService.getHash(BarrageConstant.JOBHASH);
+            Set<String> keySet = jobHash.keySet();
+            Iterator<String> iterator = keySet.iterator();
+            while (iterator.hasNext()) {
+                String next = iterator.next();
+                Integer roomVal = redisService.getval(next);
+                redisService.clean(next);
+                template.convertAndSend("/topic/count/" + next, roomVal);
+                map.put(next, roomVal);
+            }
+            template.convertAndSend("/topic/barrage/count", JSON.toJSONString(map));
+        } catch (Exception e) {
+            //直接DB
+            log.error("job缓存读取异常：" + e.getMessage());
+            List<Job> all = jobService.getAll();
+            for (Job j : all) {
+                Integer roomVal = redisService.getval(j.getRoomid());
+                redisService.clean(j.getRoomid());
+                template.convertAndSend("/topic/count/" + j.getRoomid(), roomVal);
+                map.put(j.getRoomid(), roomVal);
+            }
         }
-        template.convertAndSend("/topic/barrage/count", JSON.toJSONString(map));
     }
 
     /**
      * 系统状态
+     *
      * @throws SigarException
      */
-    @Scheduled(fixedRate = 2000)
-    public void sys() throws SigarException {
-//        try {
-//            Map<String, Object> map = new HashMap<>();
-//            Mem mem = sigar.getMem();
-//            // 当前内存使用量
-//            long l = mem.getUsed() / 1024L / 1024L;
-//            map.put("ram", l);
-//
-//            Cpu cpu = sigar.getCpu();
-//            CpuPerc cpuList[] = sigar.getCpuPercList();
-//            for (int i = 0; i < cpuList.length; i++) {
-//                NumberFormat nf = NumberFormat.getNumberInstance();
-//                // 保留两位小数
-//                nf.setMaximumFractionDigits(2);
-//                // 如果不需要四舍五入，可以使用RoundingMode.DOWN
-//                nf.setRoundingMode(RoundingMode.UP);
-//                String format = nf.format(cpuList[i].getCombined() * 100.0D);
-//                Double d = Double.parseDouble(format);
-//                //cpu使用量
-//                map.put("cpu" + i, d);
-//            }
-//
-//            template.convertAndSend("/topic/sys/data", JSON.toJSONString(map));
-//
-//        } catch (Exception e) {
-//            log.error(e.getLocalizedMessage());
-//        }
+    @Scheduled(fixedRate = 5000)
+    public void sys() {
+        NumberFormat nf = NumberFormat.getNumberInstance();
+
+        // 保留两位小数
+        nf.setMaximumFractionDigits(2);
+        // 如果不需要四舍五入，可以使用RoundingMode.DOWN
+        nf.setRoundingMode(RoundingMode.UP);
+        try {
+            Map<String, Object> map = new HashMap<>();
+            Mem mem = sigar.getMem();
+            long total = mem.getTotal() / 1024L / 1024L;
+            long l = mem.getUsed() / 1024L / 1024L;
+            String format1 = nf.format(Double.valueOf(l + "") / Double.valueOf(total + "") * 100.0D);
+            // 内存使用百分比
+            map.put("ram", format1);
+            Cpu cpu = sigar.getCpu();
+            CpuPerc cpuList[] = sigar.getCpuPercList();
+            for (int i = 0; i < cpuList.length; i++) {
+                String format = nf.format(cpuList[i].getCombined() * 100.0D);
+                Double d = Double.parseDouble(format);
+                //cpu使用量
+                map.put("cpu" + i, d);
+            }
+            map.put("cpusize", cpuList.length);
+            template.convertAndSend("/topic/sys/data", JSON.toJSONString(map));
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage());
+        }
 
     }
 

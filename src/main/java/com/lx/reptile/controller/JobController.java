@@ -3,6 +3,7 @@ package com.lx.reptile.controller;
 import com.lx.reptile.pojo.Job;
 import com.lx.reptile.service.JobService;
 import com.lx.reptile.thread.DouyuTvCrawlThread;
+import com.lx.reptile.thread.PandaTvCrawlThread;
 import com.lx.reptile.util.ThreadUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,6 +20,8 @@ public class JobController {
     DouyuTvCrawlThread douyuTvCrawlThread;
     @Autowired
     JobService jobService;
+    @Autowired
+    PandaTvCrawlThread pandaTvCrawlThread;
 
     /**
      * 创建任务
@@ -37,6 +40,23 @@ public class JobController {
         jobService.save(job);
         return true;
     }
+    @GetMapping("/panda/{roomid}")
+    Object pdrid(@PathVariable("roomid") String roomid) {
+        pandaTvCrawlThread.setRoomId(roomid);
+        //判断是否有次线程
+        if (jobService.isHave("panda" + roomid))
+            return true;
+        Thread thread = new Thread(douyuTvCrawlThread, "panda" + roomid);
+        thread.start();
+        Job job = new Job();
+        job.setRoomid("panda" + roomid);
+        job.setThreadid(thread.getId());
+        jobService.save(job);
+        return true;
+    }
+
+
+
     @GetMapping("/job/joblist")
     Object asd() {
         List<Job> all = jobService.getAll();

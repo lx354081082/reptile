@@ -44,11 +44,13 @@ public class RedisConfig {
      * redis消息监听器容器
      * 可以添加多个监听不同话题的redis监听器，只需要把消息监听器和相应的消息订阅处理器绑定，该消息监听器
      * 通过反射技术调用消息订阅处理器的相关方法进行一些业务处理
+     *
      * @param connectionFactory
      * @param listenerAdapter
      * @return
      */
-    @Bean //相当于xml中的bean
+    @Bean
+    //相当于xml中的bean
     RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
 
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
@@ -58,8 +60,10 @@ public class RedisConfig {
         //这个container 可以添加多个 messageListener
         return container;
     }
+
     /**
      * 消息监听器适配器，绑定消息处理器，利用反射技术调用消息处理器的业务方法
+     *
      * @param receiver
      * @return
      */

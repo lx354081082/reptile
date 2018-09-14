@@ -17,8 +17,11 @@ import org.springframework.stereotype.Component;
 public class RedisMessageReceiver {
     @Autowired
     BarrageConsumer barrageConsumer;
-    /**接收消息的方法*/
-    public void receiveMessage(Object message){
+
+    /**
+     * 接收消息的方法
+     */
+    public void receiveMessage(Object message) {
         try {
             String str = message.toString();
             RedisBarrage redisBarrage = JSON.parseObject(str, RedisBarrage.class);

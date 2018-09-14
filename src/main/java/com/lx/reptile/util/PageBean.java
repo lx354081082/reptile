@@ -14,6 +14,7 @@ public class PageBean<T> {
 
     public PageBean() {
     }
+
     public PageBean(List<T> list, int total) {
         this.rows = list;
         this.total = total;

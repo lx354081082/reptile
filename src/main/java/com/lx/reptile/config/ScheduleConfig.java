@@ -23,8 +23,10 @@ import org.springframework.stereotype.Controller;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * webSocket
@@ -53,11 +55,18 @@ public class ScheduleConfig {
 
 
     /**
-     * 计划任务 线程守护
+     * 爬虫线程守护
+     * 任务信息缓存
      */
     @Scheduled(fixedRate = 60000)
     public void callback() throws CloneNotSupportedException {
         List<Job> allJob = jobService.getAll();
+        try {
+            //Job信息缓存到Redis
+            redisService.cleanUpdateHash(BarrageConstant.JOBHASH, allJob);
+        } catch (Exception e) {
+            log.error("Job缓存异常" + e.getMessage());
+        }
         for (Job j : allJob) {
             //通过线程id 获取线程name 没有返回null
             String threadName = ThreadUtils.isRunnableByThreadId(j.getThreadid());
@@ -100,13 +109,30 @@ public class ScheduleConfig {
         redisService.clean(BarrageConstant.ALLBARRAGE);
         map.put("allRoom", getval);
         //房间弹幕统计
-        List<Job> all = jobService.getAll();
-        for (Job j : all) {
-            Integer roomVal = redisService.getval(j.getRoomid());
-            redisService.clean(j.getRoomid());
+//        List<Job> all = jobService.getAll();
+//        for (Job j : all) {
+//            Integer roomVal = redisService.getval(j.getRoomid());
+//            redisService.clean(j.getRoomid());
+//
+//            template.convertAndSend("/topic/count/" + j.getRoomid(), roomVal);
+//            map.put(j.getRoomid(), roomVal);
+//        }
+        //Redis中读取缓存信息
+        Map<String, Object> jobHash = null;
+        try {
+            jobHash = redisService.getHash(BarrageConstant.JOBHASH);
+        } catch (Exception e) {
+            log.error("job缓存读取异常："+e.getMessage());
+        }
+        Set<String> keySet = jobHash.keySet();
+        Iterator<String> iterator = keySet.iterator();
+        while (iterator.hasNext()) {
+            String next = iterator.next();
+            Integer roomVal = redisService.getval(next);
+            redisService.clean(next);
 
-            template.convertAndSend("/topic/count/" + j.getRoomid(), roomVal);
-            map.put(j.getRoomid(), roomVal);
+            template.convertAndSend("/topic/count/" + next, roomVal);
+            map.put(next, roomVal);
         }
         template.convertAndSend("/topic/barrage/count", JSON.toJSONString(map));
     }

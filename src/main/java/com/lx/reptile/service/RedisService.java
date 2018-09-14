@@ -1,6 +1,10 @@
 package com.lx.reptile.service;
 
 import com.lx.reptile.po.RedisBarrage;
+import com.lx.reptile.pojo.Job;
+
+import java.util.List;
+import java.util.Map;
 
 public interface RedisService {
 
@@ -17,4 +21,8 @@ public interface RedisService {
     Long rpopSize(String barrage);
 
     void pubLish(String barrage, RedisBarrage redisBarrage);
+
+    void cleanUpdateHash(String jobhash, List<Job> allJob);
+
+    Map<String, Object> getHash(String jobhash);
 }

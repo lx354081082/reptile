@@ -3,17 +3,19 @@ package com.lx.reptile.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.lx.reptile.po.RedisBarrage;
-import com.lx.reptile.pojo.DouyuBarrage;
+import com.lx.reptile.pojo.Job;
 import com.lx.reptile.service.RedisService;
 import com.lx.reptile.util.BarrageConstant;
 import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import redis.clients.jedis.Jedis;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -24,6 +26,9 @@ public class RedisServiceImpl implements RedisService {
 
     /**
      * 消息入列
+     *
+     * @param barrage
+     * @param redisBarrage
      */
     @Override
     public void lPush(String barrage, RedisBarrage redisBarrage) {
@@ -43,6 +48,40 @@ public class RedisServiceImpl implements RedisService {
         String s = JSON.toJSONString(redisBarrage);
         redisTemplate.convertAndSend(barrage, s);
         count(redisBarrage);
+    }
+
+    /**
+     * 清空 更新指定hash
+     *
+     * @param key
+     * @param list
+     */
+    @Override
+    public void cleanUpdateHash(String key, List<Job> list) {
+        //清空指定域
+        redisTemplate.delete(key);
+        //更新hash信息
+        for (Job job : list) {
+            redisTemplate.opsForHash().put(key, job.getRoomid(), job.getThreadid().toString());
+        }
+    }
+
+    /**
+     * 获取指定hash全部信息
+     *
+     * @param key
+     * @return
+     */
+    @Override
+    public Map<String, Object> getHash(String key) {
+        Map<String, Object> map = new HashMap<>();
+        Set<Object> keys = redisTemplate.opsForHash().keys(key);
+        Iterator<Object> iterator = keys.iterator();
+        while (iterator.hasNext()) {
+            String next = (String) iterator.next();
+            map.put(next, redisTemplate.opsForHash().get(key, next));
+        }
+        return map;
     }
 
     /**

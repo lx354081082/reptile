@@ -185,7 +185,7 @@ public class PandaTvCrawlThread implements Runnable, Cloneable {
         String nickname = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("nickName");
         String uid = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("rid");
 //        String roomid = msgJsonObject.getJSONObject("data").getJSONObject("to").getString("toroom");
-//        String content = msgJsonObject.getJSONObject("data").getString("content");
+        String content = msgJsonObject.getJSONObject("data").getString("content");
 //        String level = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("level");
 //        String identity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("identity");
 //        String spidentity = msgJsonObject.getJSONObject("data").getJSONObject("from").getString("sp_identity");

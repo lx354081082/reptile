@@ -209,20 +209,23 @@ public class DouyuTvCrawlThread implements Runnable, Cloneable {
 
             //todo 黏包处理异常写入
             //循环处理socekt黏包情况
-            while (dataStr.lastIndexOf("type@=") > 5) {
-                log.info("处理黏包======》"+dataStr.lastIndexOf("type@=") +"===>"+ dataStr);
+            while (dataStr.lastIndexOf("type@=") > 5 && (dataStr.lastIndexOf("type@=") - 12) > 0) {
                 //对黏包中最后一个数据包进行解析
                 MsgView msgView = new MsgView(StringUtils.substring(dataStr, dataStr.lastIndexOf("type@=")));
 //                分析该包的数据类型，以及根据需要进行业务操作
 
                 parseServerMsg(msgView.getMessageList());
+//                int i = dataStr.indexOf("type@=");
+//                if (dataStr.indexOf("type@=") == dataStr.lastIndexOf("type@=")) {
+//                    log.info(i + "===" + dataStr.lastIndexOf("type@="));
+//                    break;
+//                }
                 //处理黏包中的剩余部分
                 dataStr = StringUtils.substring(dataStr, 0, dataStr.lastIndexOf("type@=") - 12);
             }
             //对单一数据包进行解析
             MsgView msgView = new MsgView(StringUtils.substring(dataStr, dataStr.lastIndexOf("type@=")));
             //分析该包的数据类型，以及根据需要进行业务操作
-            log.info("完成====》"+dataStr);
             parseServerMsg(msgView.getMessageList());
         } catch (Exception e) {
             //结束线程
@@ -280,7 +283,6 @@ public class DouyuTvCrawlThread implements Runnable, Cloneable {
             txt = txt.substring(1, txt.length() - 2);
             log.debug(e.getMessage());
         }
-        log.info("斗鱼弹幕："+txt);
 
         //webSocket send
         template.convertAndSend("/topic/douyu/" + rid,

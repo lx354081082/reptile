@@ -109,32 +109,30 @@ public class ScheduleConfig {
         redisService.clean(BarrageConstant.ALLBARRAGE);
         map.put("allRoom", getval);
         //房间弹幕统计
-//        List<Job> all = jobService.getAll();
-//        for (Job j : all) {
-//            Integer roomVal = redisService.getval(j.getRoomid());
-//            redisService.clean(j.getRoomid());
-//
-//            template.convertAndSend("/topic/count/" + j.getRoomid(), roomVal);
-//            map.put(j.getRoomid(), roomVal);
-//        }
-        //Redis中读取缓存信息
-        Map<String, Object> jobHash = null;
         try {
-            jobHash = redisService.getHash(BarrageConstant.JOBHASH);
+            //Redis中读取缓存信息
+            Map<String, Object> jobHash = redisService.getHash(BarrageConstant.JOBHASH);
+            Set<String> keySet = jobHash.keySet();
+            Iterator<String> iterator = keySet.iterator();
+            while (iterator.hasNext()) {
+                String next = iterator.next();
+                Integer roomVal = redisService.getval(next);
+                redisService.clean(next);
+                template.convertAndSend("/topic/count/" + next, roomVal);
+                map.put(next, roomVal);
+            }
+            template.convertAndSend("/topic/barrage/count", JSON.toJSONString(map));
         } catch (Exception e) {
-            log.error("job缓存读取异常："+e.getMessage());
+            //直接DB
+            log.error("job缓存读取异常：" + e.getMessage());
+            List<Job> all = jobService.getAll();
+            for (Job j : all) {
+                Integer roomVal = redisService.getval(j.getRoomid());
+                redisService.clean(j.getRoomid());
+                template.convertAndSend("/topic/count/" + j.getRoomid(), roomVal);
+                map.put(j.getRoomid(), roomVal);
+            }
         }
-        Set<String> keySet = jobHash.keySet();
-        Iterator<String> iterator = keySet.iterator();
-        while (iterator.hasNext()) {
-            String next = iterator.next();
-            Integer roomVal = redisService.getval(next);
-            redisService.clean(next);
-
-            template.convertAndSend("/topic/count/" + next, roomVal);
-            map.put(next, roomVal);
-        }
-        template.convertAndSend("/topic/barrage/count", JSON.toJSONString(map));
     }
 
     /**
@@ -142,9 +140,10 @@ public class ScheduleConfig {
      *
      * @throws SigarException
      */
-    @Scheduled(fixedRate = 2000)
-    public void sys() throws SigarException {
+    @Scheduled(fixedRate = 5000)
+    public void sys() {
         NumberFormat nf = NumberFormat.getNumberInstance();
+
         // 保留两位小数
         nf.setMaximumFractionDigits(2);
         // 如果不需要四舍五入，可以使用RoundingMode.DOWN
@@ -167,7 +166,6 @@ public class ScheduleConfig {
             }
             map.put("cpusize", cpuList.length);
             template.convertAndSend("/topic/sys/data", JSON.toJSONString(map));
-
         } catch (Exception e) {
             log.error(e.getLocalizedMessage());
         }

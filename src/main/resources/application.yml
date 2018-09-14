@@ -5,7 +5,7 @@ server:
 logging:
   path: /java/log
   level:
-    com: WARN
+    com: info
 spring:
   thymeleaf:
     cache: false

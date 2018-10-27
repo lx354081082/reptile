@@ -44,7 +44,7 @@ public class RedisServiceImpl implements RedisService {
      * @param redisBarrage
      */
     @Override
-    public synchronized void pubLish(String barrage, RedisBarrage redisBarrage) {
+    public void pubLish(String barrage, RedisBarrage redisBarrage) {
         String s = JSON.toJSONString(redisBarrage);
         redisTemplate.convertAndSend(barrage, s);
         count(redisBarrage);

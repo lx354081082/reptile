@@ -101,7 +101,7 @@ public class ScheduleConfig {
     /**
      * 统计弹幕
      */
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 5000)
     public void count() {
         Map<String, Integer> map = new HashMap<>();
         //所有弹幕
@@ -140,7 +140,7 @@ public class ScheduleConfig {
      *
      * @throws SigarException
      */
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 10000)
     public void sys() {
         NumberFormat nf = NumberFormat.getNumberInstance();
 
